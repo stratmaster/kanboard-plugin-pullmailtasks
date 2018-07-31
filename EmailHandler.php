@@ -14,11 +14,40 @@ defined('PMT_PASWORD') or define('PMT_PASWORD', '');
 /**
  * Pull Mail Tasks
  *
-  * @author   Ralf Blumenthal
-  * @author   Frédéric Guillot
+ * @package  Pullmailtasks
+ * @author   Ralf Blumenthal/stratmaster
+ * @author   Frédéric Guillot
  */
 class EmailHandler extends Base
 {
+
+	/**
+ 	* Get getColor and getTag
+ 	*
+ 	* @access public
+ 	* @return string
+ 	*/
+	public function getColor()
+	{
+		if (defined('pullmailtasks_color')) {
+				$key = pullmailtasks_color;
+		} else {
+				$key = $this->configModel->get('pullmailtasks_color');
+		}
+		return trim($key);
+	}
+
+	public function getTag()
+	{
+		if (defined('pullmailtasks_tag')) {
+				$key = pullmailtasks_colour;
+		} else {
+				$key = $this->configModel->get('pullmailtasks_tag');
+		}
+		return trim($key);
+	}
+
+
 	/* Fetch Mail*/
 	public function pullEmail()
 	{
@@ -34,20 +63,23 @@ class EmailHandler extends Base
 		$mails = imap_search($mbox, 'SUBJECT "kanboard+"' );
 		if ( ! empty($mails) ) {
 			foreach( $mails as $num) {
-				$header = imap_headerinfo( $mbox, $num );
-//				echo "<pre>";var_dump($header);echo "</pre>";
-				$body = imap_qprint(imap_body($mbox, $num));
+				$from = imap_headerinfo( $mbox, $num );
+				$header = iconv_mime_decode_headers(imap_fetchheader( $mbox, $num ), 0, "utf-8");
+				#echo "<pre>";var_dump($header);echo "</pre>";
+				$body = imap_fetchbody($mbox, $num,1.1);
+				if ($body == "") { // no attachments is the usual cause of this
+					$body = imap_fetchbody($mbox, $num, 1);
+				}
+                $subject = $header['Subject']; //kanboard+PROJECTID:subject
 
-                $subject = $header->subject; //kanboard+PROJECTID:subject
-
-                list($target, $subject) = explode(':', $header->subject);
+                list($target, $subject) = explode(':', $header['Subject'], 2);
                 list(, $identifier) = explode('+', $target);
 
                 if ( ! empty($identifier) && ! empty($subject) ) {
                     $task = array(
-                        'sender'=>$header->to[0]->mailbox.'@'.$header->to[0]->host,  // The sender email address must be same as the user profile in Kanboard and the user must be member of the project.
+												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host, // The sender email address must be same as the user profile in Kanboard and the user must be member of the project.
                         'subject'=>$subject,
-                        'recipient'=>"kanboard+{$identifier}@pullmailtask.de",
+                        'recipient'=>$identifier,
                         'stripped-html'=>'',
                         'stripped-text'=>$body,
                     );
@@ -79,15 +111,15 @@ class EmailHandler extends Base
             return false;
         }
 
-        // The user must exists in Kanboard
-        $user = $this->user->getByEmail($payload['sender']);
+        // The user and its email address must exist in Kanboard
+        $user = $this->userModel->getByEmail($payload['sender']);
         if (empty($user)) {
             $this->logger->debug('PullMailTasks: ignored => user not found');
             return false;
         }
 
-        // The project must have a short name
-        $project = $this->project->getByIdentifier(Tool::getMailboxHash($payload['recipient']));
+        // The project must have a short name (identifier)
+				$project = $this->projectModel->getByIdentifier($payload['recipient']);
 
         if (empty($project)) {
             $this->logger->debug('PullMailTasks: ignored => project not found');
@@ -95,7 +127,7 @@ class EmailHandler extends Base
         }
 
         // The user must be member of the project
-        if (! $this->projectPermission->isMember($project['id'], $user['id'])) {
+				if (! $this->projectPermissionModel->isAssignable($project['id'], $user['id'])) {
             $this->logger->debug('PullMailTasks: ignored => user is not member of the project');
             return false;
         }
@@ -111,13 +143,14 @@ class EmailHandler extends Base
             $description = '';
         }
 
-        // Finally, we create the task
-        return (bool) $this->taskCreation->create(array(
+				// Finally, we create the task
+        return (bool) $this->taskCreationModel->create(array(
             'project_id' => $project['id'],
             'title' => $payload['subject'],
             'description' => $description,
             'creator_id' => $user['id'],
+						'color_id' => $this->getColor(),
+						'tags' => array($this->getTag()),
         ));
-    }
+			}
 }
-

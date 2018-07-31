@@ -1,15 +1,17 @@
 <?php
-//http://localhost/kanboard/?controller=Webhook&action=pullmail&plugin=Pullmailtasks
+
 namespace Kanboard\Plugin\Pullmailtasks\Controller;
 
-use Kanboard\Controller\Base;
+use Kanboard\Controller\BaseController;
 use Kanboard\Plugin\Pullmailtasks\EmailHandler;
 
 /**
  * Webhook Controller
  *
+ * @package  Pullmailtasks
+ * @author   Ralf Blumenthal/stratmaster
  */
-class Webhook extends Base
+class Webhook extends BaseController
 {
     /**
      * Handle webhooks
@@ -18,10 +20,10 @@ class Webhook extends Base
      */
     public function pullmail()
     {
-//        $this->checkWebhookToken();
+        $this->checkWebhookToken();
 
         $handler = new EmailHandler($this->container);
         $res =  $handler->pullEmail();
-		echo  "{$res[0]} PARSED  {$res[1]} IGNORED";
+		    echo  "{$res[0]} ".t('Parsed')." {$res[1]} ".t('Ignored');
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
 return array(
-    'Help on Mailgun integration' => 'Hilfe bei Mailgun-Integration',
+    'Help on PullMailTasks Plugin' => 'Hilfe bei PullMailTasks Plugin',
+    'Comma-separated' => 'Komma getrennt',
+    'Parsed' => 'Analysiert',
+    'Ignored' => 'Ignoriert',
 );
-
