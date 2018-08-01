@@ -16,7 +16,6 @@ class Plugin extends Base
 {
     public function initialize()
     {
-        $this->emailClient->setTransport('pullmailtasks', '\Kanboard\Plugin\pullmailtasks\EmailHandler');
         $this->template->hook->attach('template:config:integrations', 'pullmailtasks:integration');
         $this->route->addRoute('/pullmailtasks/handler/:token', 'Webhook', 'pullmail', 'pullmailtasks');
         $this->applicationAccessMap->add('Webhook', 'pullmail', Role::APP_PUBLIC);
@@ -29,7 +28,7 @@ class Plugin extends Base
 
     public function getPluginDescription()
     {
-        return 'Pull Email-Tasks from IMAP Account';
+        return t('Pull Email-Tasks from IMAP Account');
     }
 
     public function getPluginAuthor()
@@ -39,11 +38,16 @@ class Plugin extends Base
 
     public function getPluginVersion()
     {
-        return '0.0.2';
+        return '0.0.3';
     }
 
     public function getPluginHomepage()
     {
         return 'https://github.com/stratmaster/kanboard-plugin-pullmailtasks';
+    }
+
+    public function getCompatibleVersion()
+    {
+        return '>=1.0.40';
     }
 }

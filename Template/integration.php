@@ -1,4 +1,4 @@
-<h3><img src="<?= $this->url->dir() ?>plugins/Pullmailtasks/pullmailtasks-icon.png"/>&nbsp;PullMailTasks</h3>
+<h3><img src="<?= $this->url->dir() ?>plugins/Pullmailtasks/Asset/pullmailtasks-icon.png"/>&nbsp;PullMailTasks</h3>
     <p class="form-help"><a href="https://github.com/stratmaster/kanboard-plugin-pullmailtasks/blob/master/README.md" target="_blank"><?= t('Help on PullMailTasks Plugin') ?></a></p>
 <div class="panel">
     <input type="text" class="auto-select" readonly="readonly" value="<?= $this->url->href('Webhook', 'pullmail', array('plugin' => 'pullmailtasks', 'token' => $values['webhook_token']), false, '', true) ?>">
@@ -9,6 +9,9 @@
     <?= $this->form->label(t('Tags'), 'pullmailtasks_tag') ?>
     <?= $this->form->text('pullmailtasks_tag', $values, array()) ?>
     <p class="form-help">(<?= t('Comma-separated') ?>)</p>
+
+    <?= $this->form->hidden('receive_attachments', array('receive_attachments' => 0)) ?>
+    <?= $this->form->checkbox('receive_attachments', t('Receive attachments along with Email-Tasks'), 1, isset($values['receive_attachments']) && $values['receive_attachments'] == 1) ?>
 
     <div class="form-actions">
         <input type="submit" value="<?= t('Save') ?>" class="btn btn-blue">

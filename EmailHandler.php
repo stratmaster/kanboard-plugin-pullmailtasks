@@ -2,9 +2,12 @@
 
 namespace Kanboard\Plugin\Pullmailtasks;
 
+require_once __DIR__.'/vendor/autoload.php';
+
 use Kanboard\Core\Base;
 use Kanboard\Core\Tool;
 use Kanboard\Core\Mail\ClientInterface;
+use League\HTMLToMarkdown\HtmlConverter;
 
 defined('PMT_DOMAIN') or define('PMT_DOMAIN', '');
 defined('PMT_MSGBOX') or define('PMT_MSGBOX', '');
@@ -47,6 +50,15 @@ class EmailHandler extends Base
 		return trim($key);
 	}
 
+	public function getAttachments()
+	{
+		if (defined('receive_attachments')) {
+				$key = receive_attachments;
+		} else {
+				$key = $this->configModel->get('receive_attachments');
+		}
+		return trim($key);
+	}
 
 	/* Fetch Mail*/
 	public function pullEmail()
@@ -66,10 +78,71 @@ class EmailHandler extends Base
 				$from = imap_headerinfo( $mbox, $num );
 				$header = iconv_mime_decode_headers(imap_fetchheader( $mbox, $num ), 0, "utf-8");
 				#echo "<pre>";var_dump($header);echo "</pre>";
-				$body = imap_fetchbody($mbox, $num,1.1);
-				if ($body == "") { // no attachments is the usual cause of this
-					$body = imap_fetchbody($mbox, $num, 1);
+				$body = imap_qprint(imap_fetchbody($mbox, $num,1.1));
+				if ($body == "") {
+					$body = imap_qprint(imap_fetchbody($mbox, $num, 1));
+					$body_html = imap_qprint(imap_fetchbody($mbox, $num, 1.2));
 				}
+
+				/* get mail structure for fetching attachments */
+        $structure = imap_fetchstructure($mbox, $num);
+        $attachments = array();
+        /* if any attachments found... */
+        if(isset($structure->parts) && count($structure->parts))
+        {
+            for($i = 0; $i < count($structure->parts); $i++)
+            {
+                $attachments[$i] = array(
+                    'is_attachment' => false,
+                    'filename' => '',
+                    'name' => '',
+                    'attachment' => ''
+                );
+
+                if($structure->parts[$i]->ifdparameters)
+                {
+                    foreach($structure->parts[$i]->dparameters as $object)
+                    {
+                        if(strtolower($object->attribute) == 'filename')
+                        {
+                            $attachments[$i]['is_attachment'] = true;
+                            $attachments[$i]['filename'] = $object->value;
+                        }
+                    }
+                }
+
+                if($structure->parts[$i]->ifparameters)
+                {
+                    foreach($structure->parts[$i]->parameters as $object)
+                    {
+                        if(strtolower($object->attribute) == 'name')
+                        {
+                            $attachments[$i]['is_attachment'] = true;
+                            $attachments[$i]['name'] = $object->value;
+                        }
+                    }
+                }
+
+                if($attachments[$i]['is_attachment'])
+                {
+                    $attachments[$i]['attachment'] = imap_fetchbody($mbox, $num, $i+1);
+
+                    /* 4 = QUOTED-PRINTABLE encoding */
+                    if($structure->parts[$i]->encoding == 3)
+                    {
+												#echo "encoding 3"; // e.g. images, pdf
+												$attachments[$i]['attachment'] = quoted_printable_decode($attachments[$i]['attachment']);
+                    }
+                    /* 3 = BASE64 encoding */
+                    elseif($structure->parts[$i]->encoding == 4)
+                    {
+												#echo "encoding 4";
+                        $attachments[$i]['attachment'] = base64_decode($attachments[$i]['attachment']);
+                    }
+                }
+            }
+        }
+
                 $subject = $header['Subject']; //kanboard+PROJECTID:subject
 
                 list($target, $subject) = explode(':', $header['Subject'], 2);
@@ -77,11 +150,12 @@ class EmailHandler extends Base
 
                 if ( ! empty($identifier) && ! empty($subject) ) {
                     $task = array(
-												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host, // The sender email address must be same as the user profile in Kanboard and the user must be member of the project.
+												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host,
                         'subject'=>$subject,
                         'recipient'=>$identifier,
-                        'stripped-html'=>'',
+                        'stripped-html'=>$body_html,
                         'stripped-text'=>$body,
+												'attachments'=>$attachments,
                     );
                     $r = $this->receiveEmail($task);
                     $res[$r?0:1]++;
@@ -132,9 +206,13 @@ class EmailHandler extends Base
             return false;
         }
 
-        // Get the Markdown contents
+        // Get the Markdown contents, otherwise plaintext
         if (! empty($payload['stripped-html'])) {
-            $description = $this->htmlConverter->convert($payload['stripped-html']);
+						$htmlConverter = new HtmlConverter(array(
+							'strip_tags'   => true,
+							'remove_nodes' => 'meta script style link img span',
+						));
+            $description = $htmlConverter->convert($payload['stripped-html']);
         }
         else if (! empty($payload['stripped-text'])) {
             $description = $payload['stripped-text'];
@@ -144,13 +222,71 @@ class EmailHandler extends Base
         }
 
 				// Finally, we create the task
-        return (bool) $this->taskCreationModel->create(array(
+        $taskId = $this->taskCreationModel->create(array(
             'project_id' => $project['id'],
             'title' => $payload['subject'],
-            'description' => $description,
+            'description' => trim($description),
             'creator_id' => $user['id'],
+						'swimlane_id' => $this->getSwimlaneId($project),
 						'color_id' => $this->getColor(),
 						'tags' => array($this->getTag()),
         ));
+
+				if ($taskId > 0) {
+				if 	($this->getAttachments() == 1) {
+					#$this->addEmailBodyAsAttachment($taskId, $payload);
+					$this->uploadAttachments($taskId, $payload);
+				}
+					return true;
+				}
+
+				return false;
+
 			}
+
+			/**
+			* Get swimlane id
+			*
+			* @access public
+			* @param  array $project
+			* @return string
+			*/
+			public function getSwimlaneId(array $project)
+			{
+				$swimlane = $this->swimlaneModel->getFirstActiveSwimlane($project['id']);
+				return empty($swimlane) ? 0 : $swimlane['id'];
+			}
+
+			protected function addEmailBodyAsAttachment($taskId, array $payload)
+			{
+				$filename = t('Email') . '.txt';
+				$data = '';
+				if (! empty($payload['stripped-html'])) {
+					$data = $payload['stripped-html'];
+					$filename = t('Email') . '.html';
+				} elseif (! empty($payload['stripped-text'])) {
+					$data = $payload['stripped-text'];
+				}
+				if (! empty($data)) {
+					$this->taskFileModel->uploadContent($taskId, $filename, $data, false);
+				}
+			}
+
+			protected function uploadAttachments($taskId, array $payload)
+    	{
+        if (! empty($payload['attachments'])) {
+            foreach ($payload['attachments'] as $attachment) {
+
+							if($attachment['is_attachment'] == 1)
+							{
+								$filename = $attachment['name'];
+								if(empty($filename)) $filename = $attachment['filename'];
+								if(empty($filename)) $filename = time() . ".dat";
+
+              	$this->taskFileModel->uploadContent($taskId, $filename, $attachment['attachment']);
+
+							}
+            }
+        }
+    	}
 }
