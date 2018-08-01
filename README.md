@@ -1,4 +1,4 @@
-Pullmail plugin for Kanboard
+PullMailTasks Plugin for Kanboard
 ============================
 *(Based on Mailgun Plugin)*
 
@@ -23,7 +23,7 @@ Authors
 Installation
 ------------
 
-- Create a folder **plugins/Pullmailtasks**
+- Create a folder **plugins/PullMailTasks**
 - Copy all files under this directory
 - php-imap extension required
 - Setup a cron job calling the URL to pull mail task (URL is found under **Settings > Integrations > PullMailTasks**)
@@ -34,6 +34,7 @@ Plugin Setup
 Define those constants in your `config.php` file :
 
 ```php
+### PullMailTasks Plugin Settings ###
 // System name, port and flags
 define('PMT_DOMAIN', 'imap.goneo.de:993/imap/ssl');
 // Mailbox name

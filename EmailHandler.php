@@ -1,6 +1,6 @@
 <?php
 
-namespace Kanboard\Plugin\Pullmailtasks;
+namespace Kanboard\Plugin\PullMailTasks;
 
 require_once __DIR__.'/vendor/autoload.php';
 
@@ -15,9 +15,9 @@ defined('PMT_USER') or define('PMT_USER', '');
 defined('PMT_PASWORD') or define('PMT_PASWORD', '');
 
 /**
- * Pull Mail Tasks
+ * PullMailTasks Plugin
  *
- * @package  Pullmailtasks
+ * @package  PullMailTasks
  * @author   Ralf Blumenthal/stratmaster
  * @author   Frédéric Guillot
  */

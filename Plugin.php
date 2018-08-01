@@ -1,29 +1,34 @@
 <?php
 
-namespace Kanboard\Plugin\Pullmailtasks;
+namespace Kanboard\Plugin\PullMailTasks;
 
 use Kanboard\Core\Security\Role;
 use Kanboard\Core\Translator;
 use Kanboard\Core\Plugin\Base;
 
 /**
- * Pull Mail Tasks Plugin
+ * PullMailTasks Plugin
  *
- * @package  Pullmailtasks
+ * @package  PullMailTasks
  * @author   Ralf Blumenthal/stratmaster
  */
 class Plugin extends Base
 {
     public function initialize()
     {
-        $this->template->hook->attach('template:config:integrations', 'pullmailtasks:integration');
-        $this->route->addRoute('/pullmailtasks/handler/:token', 'Webhook', 'pullmail', 'pullmailtasks');
+        $this->template->hook->attach('template:config:integrations', 'PullMailTasks:config/integration');
+        $this->route->addRoute('/pullmailtasks/handler/:token', 'Webhook', 'pullmail', 'PullMailTasks');
         $this->applicationAccessMap->add('Webhook', 'pullmail', Role::APP_PUBLIC);
     }
 
     public function onStartup()
     {
         Translator::load($this->languageModel->getCurrentLanguage(), __DIR__.'/Locale');
+    }
+
+    public function getPluginName()
+    {
+        return 'PullMailTasks';
     }
 
     public function getPluginDescription()

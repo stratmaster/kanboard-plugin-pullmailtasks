@@ -1,14 +1,14 @@
 <?php
 
-namespace Kanboard\Plugin\Pullmailtasks\Controller;
+namespace Kanboard\Plugin\PullMailTasks\Controller;
 
 use Kanboard\Controller\BaseController;
-use Kanboard\Plugin\Pullmailtasks\EmailHandler;
+use Kanboard\Plugin\PullMailTasks\EmailHandler;
 
 /**
  * Webhook Controller
  *
- * @package  Pullmailtasks
+ * @package  PullMailTasks
  * @author   Ralf Blumenthal/stratmaster
  */
 class Webhook extends BaseController

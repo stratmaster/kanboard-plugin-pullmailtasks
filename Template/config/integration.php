@@ -1,7 +1,11 @@
-<h3><img src="<?= $this->url->dir() ?>plugins/Pullmailtasks/Asset/pullmailtasks-icon.png"/>&nbsp;PullMailTasks</h3>
-    <p class="form-help"><a href="https://github.com/stratmaster/kanboard-plugin-pullmailtasks/blob/master/README.md" target="_blank"><?= t('Help on PullMailTasks Plugin') ?></a></p>
+<h3><img src="<?= $this->url->dir() ?>plugins/PullMailTasks/Asset/pullmailtasks-icon.png"/>&nbsp;PullMailTasks</h3>
+
 <div class="panel">
-    <input type="text" class="auto-select" readonly="readonly" value="<?= $this->url->href('Webhook', 'pullmail', array('plugin' => 'pullmailtasks', 'token' => $values['webhook_token']), false, '', true) ?>">
+
+    <p class="form-help"><a href="https://github.com/stratmaster/kanboard-plugin-pullmailtasks/blob/master/README.md" target="_blank"><?= t('Help on PullMailTasks Configuration and Use') ?></a></p>
+
+    <?= $this->form->label(t('PullMailTasks URL'), 'webhook_token') ?>
+    <input type="text" class="auto-select" readonly="readonly" value="<?= $this->url->href('Webhook', 'pullmail', array('plugin' => 'PullMailTasks', 'token' => $values['webhook_token']), false, '', true) ?>">
 
     <?= $this->form->label(t('Default task color'), 'pullmailtasks_color') ?>
     <?= $this->form->select('pullmailtasks_color', array('yellow' => t('Yellow'), 'blue' => t('Blue'), 'green' => t('Green'), 'purple' => t('Purple'), 'red' => t('Red'), 'orange' => t('Orange'), 'grey' => t('Grey'), 'brown' => t('Brown'), 'deep_orange' => t('Deep Orange'), 'dark_grey' => t('Dark Grey'), 'pink' => t('Pink'), 'teal' => t('Teal'), 'cyan' => t('Cyan'), 'lime' => t('Lime'), 'light_green' => t('Light Green'), 'amber' => t('Amber')), $values) ?>
