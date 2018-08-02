@@ -25,7 +25,7 @@ class EmailHandler extends Base
 {
 
 	/**
- 	* Get getColor and getTag
+ 	* Get getColor
  	*
  	* @access public
  	* @return string
@@ -40,6 +40,12 @@ class EmailHandler extends Base
 		return trim($key);
 	}
 
+	/**
+ 	* Get getTag
+ 	*
+ 	* @access public
+ 	* @return string
+ 	*/
 	public function getTag()
 	{
 		if (defined('pullmailtasks_tag')) {
@@ -50,6 +56,12 @@ class EmailHandler extends Base
 		return trim($key);
 	}
 
+	/**
+ 	* Get getAttachments
+ 	*
+ 	* @access public
+ 	* @return string
+ 	*/
 	public function getAttachments()
 	{
 		if (defined('receive_attachments')) {
@@ -60,7 +72,32 @@ class EmailHandler extends Base
 		return trim($key);
 	}
 
-	/* Fetch Mail*/
+	/**
+ 	* Get getKeyWord
+ 	*
+ 	* @access public
+ 	* @return string
+ 	*/
+	public function getKeyWord()
+	{
+		if (defined('pullmailtasks_keyword')) {
+				$key = pullmailtasks_keyword;
+		} else {
+				$key = $this->configModel->get('pullmailtasks_keyword');
+		}
+		if ( ! empty($key) ) {
+			return trim('SUBJECT "'.$key.'+"');
+		} else {
+			return 'ALL';
+		}
+	}
+
+	/**
+	 * Fetch Mail
+	 *
+	 * @access public
+	 * @return array
+	 */
 	public function pullEmail()
 	{
 		$res = array(0,0);
@@ -72,7 +109,7 @@ class EmailHandler extends Base
 		$mbox = imap_open("{$domain}{$msgbox}", $user, $password)
 			 or die("can't connect: " . imap_last_error());
 
-		$mails = imap_search($mbox, 'SUBJECT "kanboard+"' );
+		$mails = imap_search($mbox,$this->getKeyWord());
 		if ( ! empty($mails) ) {
 			foreach( $mails as $num) {
 				$from = imap_headerinfo( $mbox, $num );
@@ -130,24 +167,25 @@ class EmailHandler extends Base
                     /* 4 = QUOTED-PRINTABLE encoding */
                     if($structure->parts[$i]->encoding == 3)
                     {
-												#echo "encoding 3"; // e.g. images, pdf
 												$attachments[$i]['attachment'] = quoted_printable_decode($attachments[$i]['attachment']);
                     }
                     /* 3 = BASE64 encoding */
                     elseif($structure->parts[$i]->encoding == 4)
                     {
-												#echo "encoding 4";
                         $attachments[$i]['attachment'] = base64_decode($attachments[$i]['attachment']);
                     }
                 }
             }
         }
 
-                $subject = $header['Subject']; //kanboard+PROJECTID:subject
+                $subject = $header['Subject'];
 
                 list($target, $subject) = explode(':', $header['Subject'], 2);
-                list(, $identifier) = explode('+', $target);
-
+								if (strstr($target, '+') && ! strstr($this->getKeyWord(), 'ALL')) {
+                	list(, $identifier) = explode('+', $target);
+								} else {
+									$identifier = $target;
+								}
                 if ( ! empty($identifier) && ! empty($subject) ) {
                     $task = array(
 												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host,
@@ -181,7 +219,7 @@ class EmailHandler extends Base
      */
     public function receiveEmail(array $payload)
     {
-        if (empty($payload['sender']) || empty($payload['subject']) || empty($payload['recipient'])) {
+        if (empty($payload['sender']) || empty($payload['subject']) || empty($payload['recipient']) || strstr($identifier, '+')) {
             return false;
         }
 
@@ -286,7 +324,7 @@ class EmailHandler extends Base
               	$this->taskFileModel->uploadContent($taskId, $filename, $attachment['attachment']);
 
 							}
-            }
+          	}
         }
-    	}
+    }
 }

@@ -17,8 +17,8 @@ class Plugin extends Base
     public function initialize()
     {
         $this->template->hook->attach('template:config:integrations', 'PullMailTasks:config/integration');
-        $this->route->addRoute('/pullmailtasks/handler/:token', 'Webhook', 'pullmail', 'PullMailTasks');
-        $this->applicationAccessMap->add('Webhook', 'pullmail', Role::APP_PUBLIC);
+        $this->route->addRoute('/pullmailtasks/handler/:token', 'WebhookController', 'pullmail', 'PullMailTasks');
+        $this->applicationAccessMap->add('WebhookController', 'pullmail', Role::APP_PUBLIC);
     }
 
     public function onStartup()

@@ -11,10 +11,10 @@ use Kanboard\Plugin\PullMailTasks\EmailHandler;
  * @package  PullMailTasks
  * @author   Ralf Blumenthal/stratmaster
  */
-class Webhook extends BaseController
+class WebhookController extends BaseController
 {
     /**
-     * Handle webhooks
+     * Handle PullMailTasks webhooks
      *
      * @access public
      */
