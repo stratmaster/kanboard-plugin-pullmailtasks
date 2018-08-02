@@ -7,7 +7,7 @@ return array(
     'Several Tags will be comma-separated' => 'Mehrere Schlagworte werden durch ein Komma getrennt.',
     'Parsed' => 'Analysiert',
     'Ignored' => 'Ignoriert',
-    'Receive attachments along with Email-Tasks' => 'Anhänge zusammen mit E-Mail-Aufgaben empfangen',
+    'Add attachments to Email-Tasks' => 'Anhänge einer Aufgaben hinzufügen',
     'Add email body as task attachment' => 'E-Mail Nachrichtentext einer Aufgabe als Anhang hinzufügen',
     'Email Subject' => 'E-Mail Betreffzeile',
     'as email subject with keyword' => 'als E-Mail Betreffzeile mit dem Schlüsselwort',
