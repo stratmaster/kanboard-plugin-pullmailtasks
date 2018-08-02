@@ -57,6 +57,22 @@ class EmailHandler extends Base
 	}
 
 	/**
+	* Get getMailBodyAttachment
+	*
+	* @access public
+	* @return string
+	*/
+	public function getMailBodyAttachment()
+	{
+		if (defined('receive_email_body')) {
+				$key = receive_email_body;
+		} else {
+				$key = $this->configModel->get('receive_email_body');
+		}
+		return trim($key);
+	}
+
+	/**
  	* Get getAttachments
  	*
  	* @access public
@@ -271,10 +287,12 @@ class EmailHandler extends Base
         ));
 
 				if ($taskId > 0) {
-				if 	($this->getAttachments() == 1) {
-					#$this->addEmailBodyAsAttachment($taskId, $payload);
-					$this->uploadAttachments($taskId, $payload);
-				}
+					if 	($this->getMailBodyAttachment() == 1) {	
+						$this->addEmailBodyAsAttachment($taskId, $payload);
+					}
+					if 	($this->getAttachments() == 1) {
+						$this->uploadAttachments($taskId, $payload);
+					}
 					return true;
 				}
 

@@ -21,6 +21,9 @@
     <?= $this->form->hidden('receive_attachments', array('receive_attachments' => 0)) ?>
     <?= $this->form->checkbox('receive_attachments', t('Receive attachments along with Email-Tasks'), 1, isset($values['receive_attachments']) && $values['receive_attachments'] == 1) ?>
 
+    <?= $this->form->hidden('receive_email_body', array('receive_email_body' => 0)) ?>
+    <?= $this->form->checkbox('receive_email_body', t('Add email body as task attachment'), 1, isset($values['receive_email_body']) && $values['receive_email_body'] == 1) ?>
+
     <div class="form-actions">
         <input type="submit" value="<?= t('Save') ?>" class="btn btn-blue">
     </div>
