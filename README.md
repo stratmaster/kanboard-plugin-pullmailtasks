@@ -17,7 +17,7 @@ Developed using [Kanboard](https://kanboard.org) Version 1.2.5
 Authors
 ------
 
-- Ralf Blumenthal, with enhancements by stratmaster
+- Ralf Blumenthal, with enhancements by Benedikt Hopmann
 - License MIT
 - Entypo Email pictogram by Daniel Bruce — www.entypo.com, released under CC BY-SA 4.0
 
@@ -53,4 +53,4 @@ define('PMT_PASWORD', '');
 > **Attention**: The from address must be same as the email address in the user profile in Kanboard and the user must be member of the project.
 4. Pull email by calling URL, which is found under **Settings > Integrations > PullMailTasks** along with
 some other settings
-5. *Optionally* set color, tag(s), support for receiving attachments and support for adding email body as task attachment for all pulled tasks. Furthermore `kanboard+MYPROJECT:TASKNAME` as email subject with keyword `kanboard` is the default value for all pulled tasks. Alternatively, the keyword could be suspended completely. This may be useful, if the imap account is used only for pulling tasks. In this case, the necessary email subject could be changed to `MYPROJECT:TASKNAME`
+5. *Optionally* set color, tag(s), support for receiving attachments and support for adding email body as task attachment for all pulled tasks. Furthermore `kanboard+MYPROJECT:TASKNAME` as email subject with keyword `kanboard` is the default value for all pulled tasks. Alternatively, the keyword could be suspended completely. This may be useful, if the imap account is used only for pulling tasks. In this case, the necessary email subject could be changed to `MYPROJECT:TASKNAME`. As another option Email Address Tags like **+** or **-** could be activated. When acivated, PullMailTasks allows listening to `foo-MYPROJECT＠example.com` resp. `foo+MYPROJECT＠example.com` for extracting the project identifier. Thus the email subject should only contain the `TASKNAME` ([more information about address tags](https://en.wikipedia.org/wiki/Email_address#Address_tags)).

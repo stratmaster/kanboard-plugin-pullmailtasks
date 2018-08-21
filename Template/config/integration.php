@@ -11,6 +11,10 @@
     <?= $this->form->select('pullmailtasks_keyword', array('kanboard' => 'kanboard+MYPROJECT:TASKNAME','' => 'MYPROJECT:TASKNAME'), $values) ?>
     <p class="form-help"><b>kanboard+MYPROJECT:TASKNAME</b> <?= t('as email subject with keyword') ?> <b>kanboard</b> <?= t('is the default value. Alternatively, the keyword could be suspended completely. This may be useful, if the imap account is used only for pulling Email-Tasks.') ?></p>
 
+    <?= $this->form->label(t('Email Address Tag'), 'pullmailtasks_addresstag') ?>
+    <?= $this->form->select('pullmailtasks_addresstag', array('' => t('None'),'-' => '-','+' => '+'), $values) ?>
+    <p class="form-help"><?= t('When acivated, PullMailTasks allows listening to foo-MYPROJECT@example.com resp. foo+MYPROJECT@example.com for extracting the project identifier. Thus the email subject should only contain the TASKNAME.') ?> <a href="https://en.wikipedia.org/wiki/Email_address#Address_tags" target="_blank"><?= t('More Information') ?></a></p>
+
     <?= $this->form->label(t('Default task color'), 'pullmailtasks_color') ?>
     <?= $this->form->select('pullmailtasks_color', array('yellow' => t('Yellow'), 'blue' => t('Blue'), 'green' => t('Green'), 'purple' => t('Purple'), 'red' => t('Red'), 'orange' => t('Orange'), 'grey' => t('Grey'), 'brown' => t('Brown'), 'deep_orange' => t('Deep Orange'), 'dark_grey' => t('Dark Grey'), 'pink' => t('Pink'), 'teal' => t('Teal'), 'cyan' => t('Cyan'), 'lime' => t('Lime'), 'light_green' => t('Light Green'), 'amber' => t('Amber')), $values) ?>
 

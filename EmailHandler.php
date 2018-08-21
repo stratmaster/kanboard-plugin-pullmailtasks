@@ -18,7 +18,7 @@ defined('PMT_PASWORD') or define('PMT_PASWORD', '');
  * PullMailTasks Plugin
  *
  * @package  PullMailTasks
- * @author   Ralf Blumenthal/stratmaster
+ * @author   Ralf Blumenthal/Benedikt Hopmann
  * @author   Frédéric Guillot
  */
 class EmailHandler extends Base
@@ -106,6 +106,22 @@ class EmailHandler extends Base
 		} else {
 			return 'ALL';
 		}
+	}
+
+	/**
+	* Get getAddressTag
+	*
+	* @access public
+	* @return string
+	*/
+	public function getAddressTag()
+	{
+		if (defined('pullmailtasks_addresstag')) {
+				$key = pullmailtasks_addresstag;
+		} else {
+				$key = $this->configModel->get('pullmailtasks_addresstag');
+		}
+		return trim($key);
 	}
 
 	/**
@@ -199,9 +215,13 @@ class EmailHandler extends Base
                 list($target, $subject) = explode(':', $header['Subject'], 2);
 								if (strstr($target, '+') && ! strstr($this->getKeyWord(), 'ALL')) {
                 	list(, $identifier) = explode('+', $target);
-								} else {
+								} elseif ((strpos($from->to[0]->mailbox,'-') !== false) && ($this->getAddressTag() != '') ) {
+									list(, $identifier) = explode($this->getAddressTag(), $from->to[0]->mailbox);
+									$subject = $header['Subject'];
+								} elseif ($this->getAddressTag() != '') {
 									$identifier = $target;
 								}
+
                 if ( ! empty($identifier) && ! empty($subject) ) {
                     $task = array(
 												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host,
@@ -287,7 +307,7 @@ class EmailHandler extends Base
         ));
 
 				if ($taskId > 0) {
-					if 	($this->getMailBodyAttachment() == 1) {	
+					if 	($this->getMailBodyAttachment() == 1) {
 						$this->addEmailBodyAsAttachment($taskId, $payload);
 					}
 					if 	($this->getAttachments() == 1) {
