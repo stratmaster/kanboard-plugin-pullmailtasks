@@ -9,7 +9,7 @@ use Kanboard\Plugin\PullMailTasks\EmailHandler;
  * Webhook Controller
  *
  * @package  PullMailTasks
- * @author   Ralf Blumenthal/stratmaster
+ * @author   Ralf Blumenthal/Benedikt Hopmann
  */
 class WebhookController extends BaseController
 {

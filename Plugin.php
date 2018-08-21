@@ -10,7 +10,7 @@ use Kanboard\Core\Plugin\Base;
  * PullMailTasks Plugin
  *
  * @package  PullMailTasks
- * @author   Ralf Blumenthal/stratmaster
+ * @author   Ralf Blumenthal/Benedikt Hopmann
  */
 class Plugin extends Base
 {
@@ -38,12 +38,12 @@ class Plugin extends Base
 
     public function getPluginAuthor()
     {
-        return 'Ralf Blumenthal/stratmaster';
+        return 'Ralf Blumenthal/Benedikt Hopmann';
     }
 
     public function getPluginVersion()
     {
-        return '0.0.3';
+        return '0.0.4';
     }
 
     public function getPluginHomepage()
