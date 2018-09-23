@@ -125,6 +125,21 @@ class EmailHandler extends Base
 	}
 
 	/**
+	* Check for base64 encoding
+	*
+	* @access public
+	* @return boolean
+	*/
+	public function is_base64_encoded($data)
+	{
+    if (preg_match('%^[a-zA-Z0-9/+]*={0,2}$%', $data)) {
+       return TRUE;
+    } else {
+       return FALSE;
+    }
+	}
+
+	/**
 	 * Fetch Mail
 	 *
 	 * @access public
@@ -152,7 +167,11 @@ class EmailHandler extends Base
 					$body = imap_qprint(imap_fetchbody($mbox, $num, 1));
 					$body_html = imap_qprint(imap_fetchbody($mbox, $num, 1.2));
 				}
-
+			 	if ($this->is_base64_encoded($body) == TRUE) {
+				 	$body = base64_decode($body);
+			 	}
+			 	#echo "<pre>";var_dump($body);echo "</pre>";
+			 	#echo "<pre>";var_dump($body_html);echo "</pre>";
 				/* get mail structure for fetching attachments */
         $structure = imap_fetchstructure($mbox, $num);
         $attachments = array();
