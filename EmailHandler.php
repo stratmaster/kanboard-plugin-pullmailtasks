@@ -2,12 +2,9 @@
 
 namespace Kanboard\Plugin\PullMailTasks;
 
-require_once __DIR__.'/vendor/autoload.php';
-
 use Kanboard\Core\Base;
 use Kanboard\Core\Tool;
 use Kanboard\Core\Mail\ClientInterface;
-use League\HTMLToMarkdown\HtmlConverter;
 
 defined('PMT_DOMAIN') or define('PMT_DOMAIN', '');
 defined('PMT_MSGBOX') or define('PMT_MSGBOX', '');
@@ -125,21 +122,6 @@ class EmailHandler extends Base
 	}
 
 	/**
-	* Check for base64 encoding
-	*
-	* @access public
-	* @return boolean
-	*/
-	public function is_base64_encoded($data)
-	{
-    if (preg_match('%^[a-zA-Z0-9/+]*={0,2}$%', $data)) {
-       return TRUE;
-    } else {
-       return FALSE;
-    }
-	}
-
-	/**
 	 * Fetch Mail
 	 *
 	 * @access public
@@ -161,19 +143,41 @@ class EmailHandler extends Base
 			foreach( $mails as $num) {
 				$from = imap_headerinfo( $mbox, $num );
 				$header = iconv_mime_decode_headers(imap_fetchheader( $mbox, $num ), 0, "utf-8");
-				#echo "<pre>";var_dump($header);echo "</pre>";
-				$body = imap_qprint(imap_fetchbody($mbox, $num,1.1));
-				if ($body == "") {
-					$body = imap_qprint(imap_fetchbody($mbox, $num, 1));
-					$body_html = imap_qprint(imap_fetchbody($mbox, $num, 1.2));
+
+				$structure = imap_fetchstructure($mbox, $num);
+
+				$obj_section = $structure;
+				$section = "1";
+				for ($i = 0 ; $i < 10 ; $i++) {
+				    if ($obj_section->type == 0) {
+				        break;
+				    } else {
+				        $obj_section = $obj_section->parts[0];
+				        $section.= ($i > 0 ? ".1" : "");
+				    }
 				}
-			 	if ($this->is_base64_encoded($body) == TRUE) {
-				 	$body = base64_decode($body);
-			 	}
-			 	#echo "<pre>";var_dump($body);echo "</pre>";
-			 	#echo "<pre>";var_dump($body_html);echo "</pre>";
-				/* get mail structure for fetching attachments */
-        $structure = imap_fetchstructure($mbox, $num);
+
+				$body = imap_fetchbody($mbox, $num, $section);
+				if ($obj_section->encoding == 0) {
+				    $body = mb_convert_encoding($body, "UTF-8", "auto");
+				} else if ($obj_section->encoding == 1) {
+				    $body = imap_8bit($body);
+				} else if ($obj_section->encoding == 2) {
+				    $body = imap_base64(imap_binary($body));
+				} else if ($obj_section->encoding == 3) {
+				    $body = imap_base64($body);
+				} else if ($obj_section->encoding == 4) {
+				    $body = imap_qprint($body);
+				}
+				foreach ($obj_section->parameters as $obj_param) {
+				    if (($obj_param->attribute == "charset") && (mb_strtoupper($obj_param->value) != "UTF-8")) {
+				        $body = utf8_encode($body);
+				        break;
+				    }
+				}
+				$body = quoted_printable_decode(strip_tags($body));
+
+			 	echo "<pre>";var_dump($body);echo "</pre>";
         $attachments = array();
         /* if any attachments found... */
         if(isset($structure->parts) && count($structure->parts))
@@ -246,7 +250,6 @@ class EmailHandler extends Base
 												'sender'=>$from->from[0]->mailbox.'@'.$from->from[0]->host,
                         'subject'=>$subject,
                         'recipient'=>$identifier,
-                        'stripped-html'=>$body_html,
                         'stripped-text'=>$body,
 												'attachments'=>$attachments,
                     );
@@ -273,7 +276,7 @@ class EmailHandler extends Base
      * @return boolean
      */
     public function receiveEmail(array $payload)
-    {
+    {global $identifier;
         if (empty($payload['sender']) || empty($payload['subject']) || empty($payload['recipient']) || strstr($identifier, '+')) {
             return false;
         }
@@ -299,15 +302,8 @@ class EmailHandler extends Base
             return false;
         }
 
-        // Get the Markdown contents, otherwise plaintext
-        if (! empty($payload['stripped-html'])) {
-						$htmlConverter = new HtmlConverter(array(
-							'strip_tags'   => true,
-							'remove_nodes' => 'meta script style link img span',
-						));
-            $description = $htmlConverter->convert($payload['stripped-html']);
-        }
-        else if (! empty($payload['stripped-text'])) {
+        // Get the plaintext contents
+        if (! empty($payload['stripped-text'])) {
             $description = $payload['stripped-text'];
         }
         else {
@@ -356,10 +352,7 @@ class EmailHandler extends Base
 			{
 				$filename = t('Email') . '.txt';
 				$data = '';
-				if (! empty($payload['stripped-html'])) {
-					$data = $payload['stripped-html'];
-					$filename = t('Email') . '.html';
-				} elseif (! empty($payload['stripped-text'])) {
+				if (! empty($payload['stripped-text'])) {
 					$data = $payload['stripped-text'];
 				}
 				if (! empty($data)) {
